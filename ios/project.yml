@@ -37,8 +37,17 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.mistatwista.mpw
         TARGETED_DEVICE_FAMILY: "1"
+  MPWTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [MPWTests]
+    dependencies:
+      - target: MPW
 schemes:
   MPW:
     build:
       targets:
         MPW: all
+    test:
+      targets:
+        - MPWTests
