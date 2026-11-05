@@ -77,4 +77,16 @@ struct ConfigStoreTests {
         #expect(!store.isReadOnly)
         #expect(store.config.sites.count == 1)
     }
+
+    @Test func refreshesWhenFileChangesElsewhere() async throws {
+        try store.save(Site(name: "a.com"))
+        await store.start()
+        defer { store.stop() }
+        // A coordinated write without our presenter counts as an edit from elsewhere.
+        try ConfigFile.write(Config(sites: [Site(name: "a.com"), Site(name: "b.com")]), to: file, presenter: nil)
+        for _ in 0..<100 where store.config.sites.count != 2 {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        #expect(store.config.sites.count == 2)
+    }
 }
