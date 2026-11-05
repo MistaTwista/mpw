@@ -18,7 +18,6 @@ struct SitePasswordView: View {
             Section {
                 Text(isRevealed ? password : String(repeating: "•", count: password.count))
                     .font(.system(.title2, design: .monospaced))
-                    .textSelection(.enabled)
                     .accessibilityIdentifier("password")
             } footer: {
                 Text("\(type.rawValue) · counter \(counter)")
