@@ -88,6 +88,14 @@ To uninstall.
 pip uninstall mpw
 ```
 
+### Go
+
+A standalone Go client lives in [`go/`](go/README.md). It needs no Python or OpenSSL.
+
+```shell
+go install github.com/MistaTwista/mpw/go/cmd/mpw@latest
+```
+
 ### Emacs
 
 Install the snap and set FULL_NAME in the configuration JSON file.
