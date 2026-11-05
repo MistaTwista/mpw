@@ -16,11 +16,9 @@ struct UnlockView: View {
             Form {
                 Section {
                     TextField("Full name", text: $fullName)
-                        .textContentType(.name)
                         .autocorrectionDisabled()
                         .accessibilityIdentifier("fullName")
                     SecureField("Master password", text: $masterPassword)
-                        .textContentType(.password)
                         .accessibilityIdentifier("masterPassword")
                         .onSubmit(unlock)
                     if store.config.fullName == nil && !store.isReadOnly {
