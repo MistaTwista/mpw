@@ -43,6 +43,12 @@ targets:
     sources: [MPWTests]
     dependencies:
       - target: MPW
+  MPWUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [MPWUITests]
+    dependencies:
+      - target: MPW
 schemes:
   MPW:
     build:
@@ -51,3 +57,4 @@ schemes:
     test:
       targets:
         - MPWTests
+        - MPWUITests
