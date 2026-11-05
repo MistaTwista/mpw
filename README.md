@@ -71,6 +71,10 @@ export MPW_CONFIG="$HOME/Library/Mobile Documents/iCloud~io~github~mistatwista~m
 
 `FULL_NAME` uses the same format as the original Python client.
 
+## iOS app
+
+An iPhone app with the same algorithm and a shared `config.json` lives in [`ios/`](ios/README.md).
+
 ## Layout
 
 | Path | Contents |
@@ -78,6 +82,7 @@ export MPW_CONFIG="$HOME/Library/Mobile Documents/iCloud~io~github~mistatwista~m
 | `cmd/mpw` | the command: flags, value priorities, prompts |
 | `internal/mpw` | the algorithm: master key, site key, templates, identicon |
 | `internal/config` | the JSON config |
+| `ios` | the iOS app and its Swift package `MPWCore` |
 
 ## Credits
 

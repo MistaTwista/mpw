@@ -1,0 +1,41 @@
+name: iOS
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  test:
+    runs-on: macos-15
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Test MPWCore
+      working-directory: ios/MPWCore
+      run: swift test
+
+    - name: Install XcodeGen
+      run: brew install xcodegen
+
+    - name: Generate project
+      working-directory: ios
+      run: xcodegen generate
+
+    - name: Pick a simulator
+      run: |
+        udid=$(xcrun simctl list devices available -j | python3 -c '
+        import json, sys
+        devices = json.load(sys.stdin)["devices"]
+        print(next(d["udid"] for runtime, ds in devices.items() if "iOS" in runtime for d in ds if d["name"].startswith("iPhone")))
+        ')
+        echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+
+    - name: Build and test the app
+      working-directory: ios
+      run: >
+        xcodebuild -project MPW.xcodeproj -scheme MPW
+        -destination "id=$SIMULATOR_UDID"
+        CODE_SIGNING_ALLOWED=NO test
