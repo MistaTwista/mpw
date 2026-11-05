@@ -3,13 +3,25 @@ name: iOS
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - "ios/**"
+      - "internal/mpw/testdata/**"
+      - ".github/workflows/ios.yml"
   pull_request:
     branches: [ "master" ]
+    paths:
+      - "ios/**"
+      - "internal/mpw/testdata/**"
+      - ".github/workflows/ios.yml"
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
   test:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
     - uses: actions/checkout@v4
 
@@ -24,18 +36,9 @@ jobs:
       working-directory: ios
       run: xcodegen generate
 
-    - name: Pick a simulator
-      run: |
-        udid=$(xcrun simctl list devices available -j | python3 -c '
-        import json, sys
-        devices = json.load(sys.stdin)["devices"]
-        print(next(d["udid"] for runtime, ds in devices.items() if "iOS" in runtime for d in ds if d["name"].startswith("iPhone")))
-        ')
-        echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
-
     - name: Build and test the app
       working-directory: ios
       run: >
         xcodebuild -project MPW.xcodeproj -scheme MPW
-        -destination "id=$SIMULATOR_UDID"
+        -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest'
         CODE_SIGNING_ALLOWED=NO test
