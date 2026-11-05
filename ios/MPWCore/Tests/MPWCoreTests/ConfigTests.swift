@@ -22,6 +22,20 @@ import Testing
     #expect(config.sites[0].type == nil)
 }
 
+@Test func typeParsesLikeTheCLI() throws {
+    func type(_ stored: String) throws -> ResultType? {
+        try Config.decode(Data(#"{"sites": [{"name": "a", "type": "\#(stored)"}]}"#.utf8)).sites[0].type
+    }
+    #expect(try type("long") == .long)
+    #expect(try type("l") == .long)
+    #expect(try type("PIN") == .pin)
+    #expect(try type("pin") == .pin)
+    #expect(try type("") == .long)
+    let config = try Config.decode(Data(#"{"sites": [{"name": "a", "type": "l"}]}"#.utf8))
+    let text = String(decoding: try config.encoded(), as: UTF8.self)
+    #expect(text.contains(#""type" : "l""#))
+}
+
 @Test func emptyObjectIsEmptyConfig() throws {
     #expect(try Config.decode(Data("{}".utf8)) == Config())
 }

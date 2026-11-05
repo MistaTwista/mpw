@@ -77,10 +77,12 @@ public struct Site: Equatable, Sendable, Codable, Identifiable {
         set { storedCounter = newValue }
     }
 
-    /// nil when the stored type is not one of the known types.
+    /// Parsed like the CLI does: missing or empty means Long; otherwise a full name or
+    /// one-letter abbreviation, case-insensitively. nil when the stored value matches neither.
+    /// `storedType` itself is never rewritten by reading this.
     public var type: ResultType? {
-        guard let storedType else { return .long }
-        return ResultType(rawValue: storedType)
+        guard let storedType, !storedType.isEmpty else { return .long }
+        return ResultType(parsing: storedType)
     }
 
     public mutating func setType(_ type: ResultType) { storedType = type.rawValue }
