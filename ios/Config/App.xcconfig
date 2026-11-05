@@ -1,0 +1,7 @@
+// Build settings of the app target.
+//
+// Signing and the iCloud entitlement need a paid Apple Developer team. Put them in
+// Signing.local.xcconfig next to this file (not committed); see Signing.local.xcconfig.example.
+// Without it the app builds for the simulator and keeps its config locally.
+CODE_SIGN_STYLE = Automatic
+#include? "Signing.local.xcconfig"

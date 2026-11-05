@@ -1,0 +1,44 @@
+name: MPW
+options:
+  bundleIdPrefix: io.github.mistatwista
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+packages:
+  MPWCore:
+    path: MPWCore
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  MPW:
+    type: application
+    platform: iOS
+    sources: [MPW]
+    configFiles:
+      Debug: Config/App.xcconfig
+      Release: Config/App.xcconfig
+    dependencies:
+      - package: MPWCore
+    info:
+      path: MPW/Info.plist
+      properties:
+        CFBundleDisplayName: mpw
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSUbiquitousContainers:
+          iCloud.io.github.mistatwista.mpw:
+            NSUbiquitousContainerIsDocumentScopePublic: true
+            NSUbiquitousContainerName: mpw
+            NSUbiquitousContainerSupportedFolderLevels: None
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.mistatwista.mpw
+        TARGETED_DEVICE_FAMILY: "1"
+schemes:
+  MPW:
+    build:
+      targets:
+        MPW: all
