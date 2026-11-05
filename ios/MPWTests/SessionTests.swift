@@ -64,4 +64,37 @@ struct SessionTests {
         #expect(!session.isUnlocked)
         #expect(session.fullName == nil)
     }
+
+    private func unlockedInBackground(after seconds: TimeInterval) -> Session {
+        let clock = Clock()
+        let session = Session(now: { clock.now })
+        // The app went to the background while the key was being derived.
+        session.didEnterBackground()
+        clock.now += 30
+        session.unlock(fullName: "Robert Lee Mitchell", key: Self.key)
+        clock.now += seconds
+        session.didBecomeActive()
+        return session
+    }
+
+    @Test func unlockInBackgroundStartsTheTimeout() {
+        #expect(!unlockedInBackground(after: 121).isUnlocked)
+        #expect(unlockedInBackground(after: 119).isUnlocked)
+    }
+
+    @Test func unlockIsDroppedWhenDeviceLockedDuringDerivation() {
+        let session = Session()
+        let epoch = session.epoch
+        session.deviceWillLock()
+        #expect(!session.unlock(fullName: "Robert Lee Mitchell", key: Self.key, ifEpochIs: epoch))
+        #expect(!session.isUnlocked)
+        #expect(session.password(siteName: "a", counter: 1, type: .long) == nil)
+    }
+
+    @Test func unlockSucceedsWhenEpochIsUnchanged() {
+        let session = Session()
+        let epoch = session.epoch
+        #expect(session.unlock(fullName: "Robert Lee Mitchell", key: Self.key, ifEpochIs: epoch))
+        #expect(session.isUnlocked)
+    }
 }

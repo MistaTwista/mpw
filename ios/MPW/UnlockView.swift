@@ -53,6 +53,7 @@ struct UnlockView: View {
     private func unlock() {
         guard !fullName.isEmpty, !masterPassword.isEmpty, !isDeriving else { return }
         let name = fullName, password = masterPassword
+        let epoch = session.epoch
         isDeriving = true
         error = nil
         Task {
@@ -65,7 +66,10 @@ struct UnlockView: View {
                     try? await store.setFullName(name)
                 }
                 masterPassword = ""
-                session.unlock(fullName: name, key: key)
+                // The device locked while the key was derived: drop it.
+                if !session.unlock(fullName: name, key: key, ifEpochIs: epoch) {
+                    self.error = "The device locked during unlock. Try again."
+                }
             } catch {
                 self.error = "Could not derive the master key."
             }

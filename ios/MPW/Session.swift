@@ -9,8 +9,11 @@ final class Session {
     static let backgroundTimeout: TimeInterval = 120
 
     private(set) var fullName: String?
+    /// Changes on every lock, so an unlock that started before it can be dropped.
+    @ObservationIgnored private(set) var epoch = 0
     @ObservationIgnored private var key: MasterKey?
     @ObservationIgnored private var backgroundedAt: Date?
+    @ObservationIgnored private var isInBackground = false
     @ObservationIgnored private let now: () -> Date
 
     init(now: @escaping () -> Date = Date.init) {
@@ -22,20 +25,32 @@ final class Session {
     func unlock(fullName: String, key: MasterKey) {
         self.key = key
         self.fullName = fullName
-        backgroundedAt = nil
+        // Unlocked while in the background: the timeout starts now.
+        backgroundedAt = isInBackground ? now() : nil
+    }
+
+    /// Unlocks only if nothing locked the session since `epoch` was read; otherwise drops `key`.
+    @discardableResult
+    func unlock(fullName: String, key: MasterKey, ifEpochIs epoch: Int) -> Bool {
+        guard epoch == self.epoch else { return false }
+        unlock(fullName: fullName, key: key)
+        return true
     }
 
     func lock() {
         key = nil
         fullName = nil
         backgroundedAt = nil
+        epoch += 1
     }
 
     func didEnterBackground() {
+        isInBackground = true
         if isUnlocked { backgroundedAt = now() }
     }
 
     func didBecomeActive() {
+        isInBackground = false
         if let since = backgroundedAt, now().timeIntervalSince(since) > Self.backgroundTimeout {
             lock()
         }
