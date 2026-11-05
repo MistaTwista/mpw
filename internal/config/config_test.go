@@ -18,7 +18,7 @@ func TestLoadMissingFile(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.json")
-	data := `{"FULL_NAME": "Robert", "sites": [{"name": "github.com", "counter": 3}]}`
+	data := `{"FULL_NAME": "Robert", "sites": [{"name": "github.com", "counter": 3, "type": "PIN"}]}`
 	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -30,11 +30,30 @@ func TestLoad(t *testing.T) {
 	if c.FullName != "Robert" {
 		t.Errorf("FullName = %q", c.FullName)
 	}
-	if s, ok := c.Site("github.com"); !ok || s.Counter != 3 {
+	if s, ok := c.Site("github.com"); !ok || s.Counter != 3 || s.Type != "PIN" {
 		t.Errorf("Site(github.com) = %+v, %v", s, ok)
 	}
 	if _, ok := c.Site("gitlab.com"); ok {
 		t.Error("unexpected site gitlab.com")
+	}
+}
+
+func TestPath(t *testing.T) {
+	t.Setenv("HOME", "/home/u")
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv(PathEnv, "")
+	if got, want := Path(), "/home/u/.config/mpw/config.json"; got != want {
+		t.Errorf("default: got %q, want %q", got, want)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", "/xdg")
+	if got, want := Path(), "/xdg/config.json"; got != want {
+		t.Errorf("XDG: got %q, want %q", got, want)
+	}
+
+	t.Setenv(PathEnv, "/icloud/config.json")
+	if got, want := Path(), "/icloud/config.json"; got != want {
+		t.Errorf("MPW_CONFIG: got %q, want %q", got, want)
 	}
 }
 

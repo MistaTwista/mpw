@@ -55,8 +55,12 @@ func run(args []string) error {
 	}
 
 	counter := resolveCounter(f, cfg, site)
+	resultType, err := resolveResultType(f, cfg, site)
+	if err != nil {
+		return err
+	}
 	if f.verbose {
-		fmt.Fprintf(os.Stderr, "full name: %s\nsite: %s\ncounter: %d\ntype: %s\n", fullName, site, counter, f.resultType)
+		fmt.Fprintf(os.Stderr, "full name: %s\nsite: %s\ncounter: %d\ntype: %s\n", fullName, site, counter, resultType)
 	}
 
 	if !f.quiet {
@@ -70,7 +74,7 @@ func run(args []string) error {
 		return fmt.Errorf("read master password: %w", err)
 	}
 
-	password, err := mpw.Password(fullName, string(masterPassword), site, counter, f.resultType)
+	password, err := mpw.Password(fullName, string(masterPassword), site, counter, resultType)
 	if err != nil {
 		return fmt.Errorf("generate password: %w", err)
 	}

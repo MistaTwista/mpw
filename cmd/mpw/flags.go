@@ -18,6 +18,7 @@ type flags struct {
 	counter    uint
 	counterSet bool // -c/--counter was given explicitly
 	resultType mpw.ResultType
+	typeSet    bool // -t/--site-result-type was given explicitly
 	verbose    bool
 	quiet      bool
 	site       string
@@ -43,7 +44,7 @@ func parseFlags(args []string, output io.Writer) (flags, error) {
 	fs.UintVar(&f.counter, "c", 1, "shorthand for -counter")
 
 	var typeHelp strings.Builder
-	typeHelp.WriteString("password template:")
+	typeHelp.WriteString("password template (overrides the site's type in the config):")
 	for _, rt := range mpw.ResultTypes {
 		fmt.Fprintf(&typeHelp, "\n%s, %s", rt.Abbr, rt.Type)
 	}
@@ -65,8 +66,11 @@ func parseFlags(args []string, output io.Writer) (flags, error) {
 	}
 
 	fs.Visit(func(fl *flag.Flag) {
-		if fl.Name == "counter" || fl.Name == "c" {
+		switch fl.Name {
+		case "counter", "c":
 			f.counterSet = true
+		case "site-result-type", "t":
+			f.typeSet = true
 		}
 	})
 	if f.counterSet && (f.counter < 1 || f.counter > math.MaxUint32) {
@@ -112,4 +116,20 @@ func resolveCounter(f flags, cfg config.Config, site string) uint32 {
 		return s.Counter
 	}
 	return 1
+}
+
+// resolveResultType picks the password type by priority: command line, then
+// the site's type in the config, then Long.
+func resolveResultType(f flags, cfg config.Config, site string) (mpw.ResultType, error) {
+	if f.typeSet {
+		return f.resultType, nil
+	}
+	if s, ok := cfg.Site(site); ok && s.Type != "" {
+		rt, err := mpw.ParseResultType(s.Type)
+		if err != nil {
+			return "", fmt.Errorf("site %s in config: %w", site, err)
+		}
+		return rt, nil
+	}
+	return mpw.Long, nil
 }

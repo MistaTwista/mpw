@@ -19,7 +19,7 @@ func parse(t *testing.T, args ...string) flags {
 
 func TestParseFlagsDefaults(t *testing.T) {
 	f := parse(t)
-	if f.counterSet || f.counter != 1 || f.resultType != mpw.Long || f.site != "" {
+	if f.counterSet || f.typeSet || f.counter != 1 || f.resultType != mpw.Long || f.site != "" {
 		t.Errorf("unexpected defaults: %+v", f)
 	}
 }
@@ -98,5 +98,48 @@ func TestResolveCounter(t *testing.T) {
 		if got := resolveCounter(tt.f, cfg, tt.site); got != tt.want {
 			t.Errorf("%s: got %d, want %d", tt.name, got, tt.want)
 		}
+	}
+}
+
+func TestResolveResultType(t *testing.T) {
+	cfg := config.Config{Sites: []config.Site{
+		{Name: "pin.com", Type: "PIN"},
+		{Name: "short.com", Type: "s"},
+		{Name: "bad.com", Type: "Huge"},
+		{Name: "plain.com"},
+	}}
+
+	tests := []struct {
+		name string
+		f    flags
+		site string
+		want mpw.ResultType
+	}{
+		{"cli over config", flags{resultType: mpw.Maximum, typeSet: true}, "pin.com", mpw.Maximum},
+		{"explicit default over config", flags{resultType: mpw.Long, typeSet: true}, "pin.com", mpw.Long},
+		{"config", flags{resultType: mpw.Long}, "pin.com", mpw.PIN},
+		{"config abbreviation", flags{resultType: mpw.Long}, "short.com", mpw.Short},
+		{"site without type", flags{resultType: mpw.Long}, "plain.com", mpw.Long},
+		{"unknown site", flags{resultType: mpw.Long}, "gitlab.com", mpw.Long},
+		{"cli hides bad config type", flags{resultType: mpw.PIN, typeSet: true}, "bad.com", mpw.PIN},
+	}
+	for _, tt := range tests {
+		got, err := resolveResultType(tt.f, cfg, tt.site)
+		if err != nil || got != tt.want {
+			t.Errorf("%s: got %q, %v; want %q", tt.name, got, err, tt.want)
+		}
+	}
+
+	if _, err := resolveResultType(flags{resultType: mpw.Long}, cfg, "bad.com"); err == nil {
+		t.Error("expected error for unknown type in config")
+	}
+}
+
+func TestParseFlagsTypeSet(t *testing.T) {
+	if f := parse(t, "-t", "long"); !f.typeSet {
+		t.Error("-t long: typeSet = false")
+	}
+	if f := parse(t, "--site-result-type", "x"); !f.typeSet || f.resultType != mpw.Maximum {
+		t.Errorf("--site-result-type x: %+v", f)
 	}
 }

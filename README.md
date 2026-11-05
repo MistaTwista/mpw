@@ -45,19 +45,31 @@ environment variable, the `-u` flag. If none is set, `mpw` asks for it.
 
 Counter, from lowest to highest priority: 1, the site's `counter` in the config, the `-c` flag.
 
+Password type, from lowest to highest priority: Long, the site's `type` in the config, the `-t` flag.
+
 ### Config
 
-`~/.config/mpw/config.json`, or `$XDG_CONFIG_HOME/config.json` when `XDG_CONFIG_HOME` is set.
-`FULL_NAME` uses the same format as the original Python client.
+`$MPW_CONFIG` when set, otherwise `~/.config/mpw/config.json`, or `$XDG_CONFIG_HOME/config.json`
+when `XDG_CONFIG_HOME` is set.
 
 ```json
 {
   "FULL_NAME": "Robert Lee Mitchell",
   "sites": [
-    {"name": "github.com", "counter": 2}
+    {"name": "github.com", "counter": 2, "type": "Long"}
   ]
 }
 ```
+
+`type` is optional and takes the same names and letters as `-t`.
+
+To share the site list with the iOS app, point the CLI at the app's iCloud Drive folder:
+
+```sh
+export MPW_CONFIG="$HOME/Library/Mobile Documents/iCloud~io~github~mistatwista~mpw/Documents/config.json"
+```
+
+`FULL_NAME` uses the same format as the original Python client.
 
 ## Layout
 

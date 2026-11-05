@@ -2,8 +2,10 @@
 //
 //	{
 //	  "FULL_NAME": "Robert Lee Mitchell",
-//	  "sites": [{"name": "github.com", "counter": 2}]
+//	  "sites": [{"name": "github.com", "counter": 2, "type": "Long"}]
 //	}
+//
+// The iOS app reads and writes the same file and keeps keys it does not know.
 package config
 
 import (
@@ -18,6 +20,8 @@ import (
 type Site struct {
 	Name    string `json:"name"`
 	Counter uint32 `json:"counter"`
+	// Type is a result type name such as "Long". Empty means the default.
+	Type string `json:"type,omitempty"`
 }
 
 type Config struct {
@@ -35,9 +39,15 @@ func (c Config) Site(name string) (Site, bool) {
 	return Site{}, false
 }
 
-// Path is $XDG_CONFIG_HOME/config.json when XDG_CONFIG_HOME is set,
-// otherwise ~/.config/mpw/config.json.
+// PathEnv names the environment variable with an explicit config path.
+const PathEnv = "MPW_CONFIG"
+
+// Path is $MPW_CONFIG when set, then $XDG_CONFIG_HOME/config.json when
+// XDG_CONFIG_HOME is set, otherwise ~/.config/mpw/config.json.
 func Path() string {
+	if p := os.Getenv(PathEnv); p != "" {
+		return p
+	}
 	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
 		return filepath.Join(dir, "config.json")
 	}
