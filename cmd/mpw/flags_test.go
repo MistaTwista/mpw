@@ -4,8 +4,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/MistaTwista/mpw/go/internal/config"
-	"github.com/MistaTwista/mpw/go/internal/mpw"
+	"github.com/MistaTwista/mpw/internal/config"
+	"github.com/MistaTwista/mpw/internal/mpw"
 )
 
 func parse(t *testing.T, args ...string) flags {

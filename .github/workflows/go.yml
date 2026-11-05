@@ -1,5 +1,3 @@
-# Builds and tests the Go client in go/.
-
 name: Go
 
 on:
@@ -12,17 +10,13 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: go
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version-file: go/go.mod
-        cache-dependency-path: go/go.sum
+        go-version-file: go.mod
 
     - name: Vet
       run: go vet ./...

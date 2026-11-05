@@ -1,4 +1,4 @@
-module github.com/MistaTwista/mpw/go
+module github.com/MistaTwista/mpw
 
 go 1.22.3
 
