@@ -1,7 +1,7 @@
 # iOS app design
 
 Date: 2026-11-05
-Status: approved design, awaiting implementation plan
+Status: approved design; plan in docs/superpowers/plans/2026-11-05-ios-app.md
 
 ## Goal
 
@@ -22,7 +22,8 @@ the Mac, and a small codebase we maintain ourselves.
 | Master password | Typed on every unlock. Neither the password nor the master key is ever persisted. |
 | AutoFill | Not in v1. The algorithm lives in a separate package so an extension can be added later. |
 | Config sharing | `config.json` in the app's iCloud container; the CLI finds it through `MPW_CONFIG`. |
-| scrypt | Vendored reference C implementation by Colin Percival (BSD-2) as a C target. |
+| scrypt | Small C target written from RFC 7914: the RFC's Salsa20/8 reference code plus PBKDF2-HMAC-SHA256 from CommonCrypto. No third-party code. |
+| UI language | English. Localization is out of scope for v1. |
 | Apple account | Paid Developer Program will be obtained; until then the app runs with a local config. |
 | Identifiers | Bundle id `io.github.mistatwista.mpw`, iCloud container `iCloud.io.github.mistatwista.mpw`. Can be changed before the first App Store upload. |
 
@@ -40,7 +41,7 @@ ios/
   MPWUITests/              one smoke UI test
   MPWCore/                 Swift package, no UI, builds for iOS and macOS
     Package.swift
-    Sources/CScrypt/       vendored scrypt (C), with its LICENSE
+    Sources/CScrypt/       scrypt (C) from RFC 7914
     Sources/MPWCore/       algorithm and config model
     Tests/MPWCoreTests/    reads internal/mpw/testdata/* from the repository
 ```
@@ -59,7 +60,7 @@ Mirrors the Go package `internal/mpw` one to one, so the two implementations are
   parsed case-insensitively.
 - `Identicon(fullName:masterPassword:)` — text and color index 1…7, same tables as Go,
   including the `☄` accessory.
-- `MasterKey` is a value type wrapping the 64 bytes. It is held only in memory; when the session
+- `MasterKey` is a final class wrapping the 64 bytes. It is held only in memory; when the session
   ends the owning object drops it and zeroes its buffer on a best-effort basis (Swift may have
   made copies, so this is hygiene, not a guarantee).
 
@@ -99,8 +100,8 @@ scrypt runs off the main actor (`Task.detached`) because it takes a noticeable f
 
 ### Unlock
 
-- Full name field, prefilled from `FULL_NAME`. When the config has no name, the app offers to
-  save the typed one after a successful unlock.
+- Full name field, prefilled from `FULL_NAME`. When the config has no name, a "Remember name"
+  toggle (on by default) saves the typed name after a successful unlock.
 - Master password field (secure).
 - Identicon under the fields, recomputed as the user types (one HMAC, cheap). It lets the user
   spot a typo before generating anything.
