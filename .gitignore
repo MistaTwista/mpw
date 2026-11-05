@@ -1,11 +1,10 @@
-*.o
-*.so
-*.pyc
-__pycache__
+# Binaries
+/mpw
+*.exe
+*.test
+*.out
+
+# Editors
+.idea/
+.vscode/
 *~
-bin
-build
-dist
-*.egg-info
-lib*
-pyvenv*
