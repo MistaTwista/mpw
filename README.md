@@ -61,6 +61,8 @@ when `XDG_CONFIG_HOME` is set.
 }
 ```
 
+`FULL_NAME` uses the same format as the original Python client.
+
 `type` is optional and takes the same names and letters as `-t`.
 
 To share the site list with the iOS app, point the CLI at the app's iCloud Drive folder:
@@ -68,8 +70,6 @@ To share the site list with the iOS app, point the CLI at the app's iCloud Drive
 ```sh
 export MPW_CONFIG="$HOME/Library/Mobile Documents/iCloud~io~github~mistatwista~mpw/Documents/config.json"
 ```
-
-`FULL_NAME` uses the same format as the original Python client.
 
 ## iOS app
 
