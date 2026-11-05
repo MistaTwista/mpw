@@ -62,7 +62,7 @@ struct UnlockView: View {
                     try MasterKey(fullName: name, masterPassword: password)
                 }.value
                 if rememberName && store.config.fullName == nil && !store.isReadOnly {
-                    try? store.setFullName(name)
+                    try? await store.setFullName(name)
                 }
                 masterPassword = ""
                 session.unlock(fullName: name, key: key)

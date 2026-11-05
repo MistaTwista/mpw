@@ -24,6 +24,7 @@ struct SiteEditorView: View {
                     .keyboardType(.URL)
                     .accessibilityIdentifier("siteName")
                 Stepper("Counter: \(site.counter)", value: $site.counter, in: 1...UInt32.max)
+                    .accessibilityIdentifier("counter")
                 Picker("Type", selection: Binding(get: { site.type ?? .long }, set: { site.setType($0) })) {
                     ForEach(ResultType.allCases, id: \.self) { type in
                         Text("\(type.rawValue) — \(type.summary)").tag(type)
@@ -41,13 +42,16 @@ struct SiteEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        do {
-                            try store.save(site, replacing: originalName)
-                            dismiss()
-                        } catch {
-                            self.error = error.localizedDescription
+                        Task {
+                            do {
+                                try await store.save(site, replacing: originalName)
+                                dismiss()
+                            } catch {
+                                self.error = error.localizedDescription
+                            }
                         }
                     }
+                    .accessibilityIdentifier("save")
                 }
             }
         }

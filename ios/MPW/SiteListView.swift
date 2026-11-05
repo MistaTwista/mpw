@@ -29,6 +29,11 @@ struct SiteListView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+                if store.isWaitingForICloud {
+                    Label("Waiting for iCloud to download config.json…", systemImage: "icloud.and.arrow.down")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
                 if let loadError = store.loadError {
                     Label("config.json is broken, the list is read-only: \(loadError)", systemImage: "exclamationmark.triangle")
                         .font(.footnote)
@@ -44,6 +49,7 @@ struct SiteListView: View {
                             Button("Add “\(unknownSite)”") {
                                 editing = EditorRequest(site: Site(name: unknownSite), originalName: nil)
                             }
+                            .accessibilityIdentifier("addSearched")
                         }
                     }
                 }
@@ -55,8 +61,6 @@ struct SiteListView: View {
                 }
             }
             .searchable(text: $search, prompt: "Site")
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
             .navigationTitle(session.fullName ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { listToolbar }
@@ -69,6 +73,10 @@ struct SiteListView: View {
                 Text(error ?? "")
             }
         }
+        // Site names are case-sensitive, so the search field must not change what is typed.
+        // The search bar belongs to the navigation stack, so these are set outside it.
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
     }
 
     @ToolbarContentBuilder
@@ -88,17 +96,13 @@ struct SiteListView: View {
     private func row(_ site: Site) -> some View {
         if let type = site.type {
             NavigationLink {
-                SitePasswordView(session: session, siteName: site.name, counter: site.counter, type: type)
-                    .toolbar {
-                        if !store.isReadOnly {
-                            Button("Edit") {
-                                editing = EditorRequest(site: site, originalName: site.name)
-                            }
-                        }
-                    }
+                SavedSitePasswordView(session: session, store: store, siteName: site.name) { site in
+                    editing = EditorRequest(site: site, originalName: site.name)
+                }
             } label: {
                 SiteRow(site: site, typeName: type.rawValue)
             }
+            .accessibilityIdentifier("site:\(site.name)")
         } else {
             SiteRow(site: site, typeName: "Unknown type “\(site.storedType ?? "")”")
                 .foregroundStyle(.red)
@@ -111,12 +115,15 @@ struct SiteListView: View {
     }
 
     private func delete(at offsets: IndexSet) {
-        do {
-            for name in offsets.map({ filtered[$0].name }) {
-                try store.delete(siteNamed: name)
+        let names = offsets.map { filtered[$0].name }
+        Task {
+            do {
+                for name in names {
+                    try await store.delete(siteNamed: name)
+                }
+            } catch {
+                self.error = error.localizedDescription
             }
-        } catch {
-            self.error = error.localizedDescription
         }
     }
 }

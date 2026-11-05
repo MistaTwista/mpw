@@ -3,7 +3,7 @@ import Foundation
 /// Where config.json lives: the app's iCloud container when available, otherwise local.
 struct ConfigLocation: Sendable {
     static let containerIdentifier = "iCloud.io.github.mistatwista.mpw"
-    /// UI tests point the app at a temporary folder through this environment variable.
+    /// UI tests point the app at a temporary folder through this environment variable (debug builds only).
     static let overrideEnvironmentKey = "MPW_CONFIG_DIR"
 
     let fileURL: URL
@@ -15,9 +15,11 @@ struct ConfigLocation: Sendable {
 
     /// Looking up the iCloud container can block, so this runs off the main actor.
     static func resolve() async -> ConfigLocation {
+        #if DEBUG
         if let dir = ProcessInfo.processInfo.environment[overrideEnvironmentKey] {
             return local(directory: URL(fileURLWithPath: dir))
         }
+        #endif
         let container = await Task.detached {
             FileManager.default.url(forUbiquityContainerIdentifier: containerIdentifier)
         }.value

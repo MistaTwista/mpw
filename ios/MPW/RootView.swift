@@ -21,10 +21,12 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .background: session.didEnterBackground()
+            case .background:
+                session.didEnterBackground()
+                store.stop()
             case .active:
                 session.didBecomeActive()
-                Task { await store.reload() }
+                Task { await store.start() }
             default: break
             }
         }
