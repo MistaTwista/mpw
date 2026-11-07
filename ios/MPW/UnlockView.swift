@@ -21,8 +21,9 @@ struct UnlockView: View {
                     SecureField("Master password", text: $masterPassword)
                         .accessibilityIdentifier("masterPassword")
                         .onSubmit(unlock)
-                    if store.config.fullName == nil && !store.isReadOnly {
+                    if offersToRememberName {
                         Toggle("Remember name", isOn: $rememberName)
+                            .accessibilityIdentifier("rememberName")
                     }
                 } footer: {
                     if !fullName.isEmpty && !masterPassword.isEmpty {
@@ -47,12 +48,22 @@ struct UnlockView: View {
             }
             .navigationTitle("mpw")
             .onAppear { fullName = store.config.fullName ?? fullName }
+            .onChange(of: store.config.fullName) { old, new in
+                // Follow a name changed elsewhere unless the user is typing a different one.
+                if fullName.isEmpty || fullName == old { fullName = new ?? "" }
+            }
         }
+    }
+
+    /// The typed name is not the one in the config, so it can be saved as the new default.
+    private var offersToRememberName: Bool {
+        !fullName.isEmpty && fullName != store.config.fullName && !store.isReadOnly
     }
 
     private func unlock() {
         guard !fullName.isEmpty, !masterPassword.isEmpty, !isDeriving else { return }
         let name = fullName, password = masterPassword
+        let saveName = rememberName && offersToRememberName
         let epoch = session.epoch
         isDeriving = true
         error = nil
@@ -62,7 +73,7 @@ struct UnlockView: View {
                 let key = try await Task.detached(priority: .userInitiated) {
                     try MasterKey(fullName: name, masterPassword: password)
                 }.value
-                if rememberName && store.config.fullName == nil && !store.isReadOnly {
+                if saveName {
                     try? await store.setFullName(name)
                 }
                 masterPassword = ""

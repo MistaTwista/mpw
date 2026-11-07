@@ -39,6 +39,35 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Jejr5[RepuSosp"].waitForExistence(timeout: 5))
     }
 
+    /// Replacing the remembered name and unlocking saves the new name to config.json.
+    @MainActor
+    func testChangedNameIsRemembered() throws {
+        let configDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
+        let configFile = configDir.appendingPathComponent("config.json")
+        try Data(#"{"FULL_NAME": "Old Name", "sites": []}"#.utf8).write(to: configFile)
+
+        let app = XCUIApplication()
+        app.launchEnvironment["MPW_CONFIG_DIR"] = configDir.path
+        app.launch()
+
+        let name = app.textFields["fullName"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10))
+        XCTAssertEqual(name.value as? String, "Old Name")
+        name.tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Old Name".count))
+        name.typeText("Robert Lee Mitchell")
+        XCTAssertTrue(app.switches["rememberName"].exists, "offer to remember a changed name")
+        let password = app.secureTextFields["masterPassword"]
+        password.tap()
+        password.typeText("banana colored duckling")
+        app.buttons["unlock"].tap()
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
+
+        let saved = try JSONSerialization.jsonObject(with: Data(contentsOf: configFile)) as? [String: Any]
+        XCTAssertEqual(saved?["FULL_NAME"] as? String, "Robert Lee Mitchell")
+    }
+
     /// Add a site, open it, then edit its counter: the shown password follows the edit.
     @MainActor
     func testPasswordFollowsEdit() throws {
